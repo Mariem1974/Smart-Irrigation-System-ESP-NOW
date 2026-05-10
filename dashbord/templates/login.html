@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AgroSense · Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}"/>
+</head>
+<body>
+
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <div class="split-layout">
+
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="left-content">
+
+        <div class="brand">
+          <div class="brand-mark">AG</div>
+          <div>
+            <div class="brand-name">AgroSense</div>
+            <div class="brand-tag">Smart Irrigation System</div>
+          </div>
+        </div>
+
+        <h1 class="hero-title">
+          Intelligent<br/>
+          <span class="hero-accent">Irrigation</span><br/>
+          for Modern Farms
+        </h1>
+
+        <p class="hero-desc">
+          ESP-NOW powered sensor network with Random Forest ML
+          for data-driven, water-efficient agriculture.
+        </p>
+
+        <div class="feature-pills">
+          <div class="pill">ESP-NOW Protocol</div>
+          <div class="pill">Random Forest ML</div>
+          <div class="pill">34% Water Saved</div>
+        </div>
+
+      
+
+        <div class="team-names">
+          <div class="team-names-label">Byte Girls &mdash; FEHU IoT 2026</div>
+          <div class="team-names-list">
+            Shahd Ahmed Mahmoud &nbsp;&middot;&nbsp;
+            Mariam Mohammed Ahmed &nbsp;&middot;&nbsp;
+            Mariem Maher Mohammed &nbsp;&middot;&nbsp;
+            Mariam Alaa ElDin &nbsp;&middot;&nbsp;
+            Mariem Ossama Hussien &nbsp;&middot;&nbsp;
+            Rawan Gamal Abdullah
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="login-card">
+
+        <div class="mobile-brand">
+          <div class="brand-mark">AG</div>
+          <div>
+            <div class="brand-name">AgroSense</div>
+            <div class="brand-tag">Smart Irrigation System</div>
+          </div>
+        </div>
+
+        <div class="login-header">
+          <div class="login-badge">ADMIN ACCESS</div>
+          <h2 class="login-title">Sign In</h2>
+          <p class="login-sub">Administrator credentials required</p>
+        </div>
+
+        {% if error %}
+        <div class="error-banner">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="login-form" id="loginForm">
+
+          <div class="field-group">
+            <label class="field-label">Username</label>
+            <div class="field-wrap">
+              <input
+                type="text"
+                name="username"
+                class="field-input"
+                placeholder="Enter username"
+                required
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Password</label>
+            <div class="field-wrap">
+              <input
+                type="password"
+                name="password"
+                id="passwordInput"
+                class="field-input"
+                placeholder="Enter password"
+                required
+                autocomplete="current-password"
+              />
+              <button type="button" class="toggle-pass" onclick="togglePassword()" id="toggleBtn">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-login" id="loginBtn">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-arrow">&rarr;</span>
+          </button>
+
+        </form>
+
+        <div class="login-note">
+          Access restricted to system administrators only.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

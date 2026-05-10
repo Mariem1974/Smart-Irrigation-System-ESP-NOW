@@ -1,0 +1,16 @@
+{
+  "features": [
+    "moisture",
+    "temperature",
+    "humidity",
+    "moisture_deficit",
+    "hum_factor"
+  ],
+  "target": "valve_angle",
+  "valve_min": 10,
+  "valve_max": 120,
+  "n_estimators": 10,
+  "test_mae": 0.3392,
+  "test_r2": 0.9988,
+  "cv_r2_mean": 0.9987
+}

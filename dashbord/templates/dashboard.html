@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AgroSense · Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+</head>
+<body>
+
+  <div id="alertBanner" class="alert-banner-top"></div>
+
+  <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">AG</div>
+      <div>
+        <div class="logo-name">AgroSense</div>
+        <div class="logo-sub">ESP-NOW · MQTT · ML</div>
+      </div>
+    </div>
+
+    <nav class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <a href="#overview"       class="nav-item active"><span class="nav-dot"></span>Overview</a>
+      <a href="#valve-section"  class="nav-item"><span class="nav-dot"></span>Valve Control</a>
+      <a href="#alerts-section" class="nav-item"><span class="nav-dot"></span>Alerts</a>
+    </nav>
+
+    <div class="mqtt-block">
+      <div class="mqtt-row">
+        <div id="mqttDot" class="mqtt-dot offline"></div>
+        <span class="mqtt-label">MQTT Broker</span>
+      </div>
+      <div id="mqttText" class="mqtt-text">Connecting...</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">{{ user.full_name[0] if user.full_name else 'A' }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.full_name or user.username }}</div>
+          <div class="user-role">{{ user.role }}</div>
+        </div>
+      </div>
+      <a href="/logout" class="btn-logout">Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar" id="overview">
+      <div>
+        <div class="page-title">Smart Irrigation Dashboard</div>
+        <div class="page-sub">Live</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-secondary" onclick="sendSleep(60)">Sleep Node A</button>
+        <button class="btn-primary" onclick="refreshAll()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="status-text">System Online &mdash; <span id="statusMsg">Waiting for ESP32...</span></div>
+      <div class="status-sep"></div>
+      <div class="status-metric"><div class="sm-val">ESP-NOW</div><div class="sm-lbl">Protocol</div></div>
+      <div class="status-sep"></div>
+      <div class="status-metric"><div class="sm-val" id="statReadings">0</div><div class="sm-lbl">Readings</div></div>
+      <div class="status-sep"></div>
+      <div class="status-metric"><div class="sm-val" id="statAlerts">0</div><div class="sm-lbl">Alerts</div></div>
+      <div class="status-sep"></div>
+      <div class="status-metric"><div class="sm-val" id="currentTime">--:--</div><div class="sm-lbl" id="currentDate">--</div></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-label">SOIL MOISTURE</div>
+        <div class="kpi-value"><span id="kpiMoisture">--</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-sub">NODE_A</div>
+        <div class="kpi-badge badge-green" id="kpiMoistureBadge">Waiting</div>
+      </div>
+      <div class="kpi-card featured">
+        <div class="kpi-icon-label" style="color:rgba(255,255,255,0.5)">TEMPERATURE</div>
+        <div class="kpi-value" style="color:#fff"><span id="kpiTemp">--</span><span class="kpi-unit" style="color:var(--light-green)">°C</span></div>
+        <div class="kpi-sub" style="color:rgba(255,255,255,0.4)">DHT11</div>
+        <div class="kpi-badge badge-white" id="kpiTempBadge">Waiting</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-label">AIR HUMIDITY</div>
+        <div class="kpi-value"><span id="kpiHumidity">--</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-sub">DHT11</div>
+        <div class="kpi-badge badge-gold" id="kpiHumidityBadge">Waiting</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-label">SERVO ANGLE</div>
+        <div class="kpi-value"><span id="kpiAngle">0</span><span class="kpi-unit">°</span></div>
+        <div class="kpi-sub">Live</div>
+        <div class="kpi-badge badge-green" id="kpiValveBadge">CLOSED</div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="left-col">
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Soil Moisture History &mdash; NODE_A</div>
+            <div class="card-badge">Last 24 readings</div>
+          </div>
+          <div style="position:relative;height:300px;">
+            <canvas id="moistureChart"></canvas>
+          </div>
+          <div class="chart-labels"><span>Older</span><span>Latest</span></div>
+        </div>
+        <div class="cards-row">
+          <div class="card nodes-card">
+            <div class="card-header">
+              <div class="card-title">Sensor Nodes &mdash; ESP-NOW Network</div>
+              <div class="card-badge" id="nodeBadge">NODE_A</div>
+            </div>
+            <div class="nodes-grid" id="nodesGrid"><div class="node-skeleton"></div></div>
+            <div class="mac-row">
+              Node A: <strong>44:1D:64:F3:6F:FC</strong> &rarr; Gateway: <strong>80:F3:DA:63:80:84</strong>
+            </div>
+          </div>
+          <div class="card sleep-card">
+            <div class="card-header">
+              <div class="card-title">Deep Sleep Control</div>
+              <div class="card-badge">NODE_A</div>
+            </div>
+            <div class="sleep-desc">Send Node A to deep sleep</div>
+            <div class="sleep-grid">
+              <button onclick="sendSleep(30)"  class="sleep-btn">30 sec</button>
+              <button onclick="sendSleep(60)"  class="sleep-btn">1 min</button>
+              <button onclick="sendSleep(300)" class="sleep-btn">5 min</button>
+              <button onclick="sendSleep(600)" class="sleep-btn">10 min</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="alerts-section">
+          <div class="card-header">
+            <div class="card-title">Alerts from Gateway</div>
+            <div class="card-badge" id="eventsBadge">Loading...</div>
+          </div>
+          <div class="events-list" id="eventsList">
+            <div class="events-loading">Waiting for alerts from ESP32...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="right-col" id="valve-section">
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Valve / Servo Motor</div>
+            <div class="card-badge">Auto + Manual</div>
+          </div>
+
+          <div class="valve-control">
+            <div class="valve-circle" id="valveCircle" onclick="toggleValve()">
+              <div class="valve-state-label" id="valveStatus">CLOSED</div>
+              <div class="valve-state-sub">tap to toggle</div>
+            </div>
+            <div class="valve-info">
+              <span class="valve-angle" id="valveAngle">0°</span>
+              <div class="valve-sublabel">Servo Angle</div>
+            </div>
+          </div>
+
+          <div class="slider-block">
+            <div class="slider-header">
+              <span class="slider-title">Manual Angle Control</span>
+              <span class="slider-display" id="sliderDisplay">0°</span>
+            </div>
+            <input type="range" id="servoSlider" min="0" max="120" value="0" step="5"
+              class="servo-slider" oninput="updateSliderDisplay(this.value)"/>
+            <div class="slider-ticks">
+              <span>0°</span><span>30°</span><span>60°</span><span>90°</span><span>120°</span>
+            </div>
+            <div class="preset-grid">
+              <button onclick="setServoAngle(0)"   class="preset-btn">0°<span>Close</span></button>
+              <button onclick="setServoAngle(40)"  class="preset-btn">40°<span>Low</span></button>
+              <button onclick="setServoAngle(80)"  class="preset-btn">80°<span>Mid</span></button>
+              <button onclick="setServoAngle(120)" class="preset-btn">120°<span>Full</span></button>
+            </div>
+            <button onclick="sendManualAngle()" class="btn-send">Send to Gateway</button>
+          </div>
+
+          <div class="auto-logic">
+            <div class="auto-logic-title">Auto Logic (Gateway)</div>
+            <div class="auto-logic-row"><span class="dot green"></span>Moisture &lt; 40% &rarr; Opens valve (proportional)</div>
+            <div class="auto-logic-row"><span class="dot red"></span>Moisture &gt; 70% &rarr; Closes valve fully</div>
+            <div class="auto-logic-row"><span class="dot gold"></span>Temp &gt; 33&deg;C &rarr; +15% angle</div>
+            <div class="auto-logic-row"><span class="dot blue"></span>Humidity &gt; 70% &rarr; -30% angle</div>
+          </div>
+        </div>
+        <div class="card">
+        <div class="card-header">
+          <div class="card-title">Byte Girls</div>
+          <div class="card-badge">FEHU · IoT 2026</div>
+        </div>
+        <div class="team-subtitle">Smart Irrigation Project Team</div>
+        <div class="team-list">
+          <div class="team-member"><div class="t-avatar av-green">S</div><div class="t-name">Shahd Ahmed Mahmoud</div></div>
+          <div class="team-member"><div class="t-avatar av-mid">M</div><div class="t-name">Mariam Mohammed Ahmed</div></div>
+          <div class="team-member"><div class="t-avatar av-gold">M</div><div class="t-name">Mariem Maher Mohammed</div></div>
+          <div class="team-member"><div class="t-avatar av-light">M</div><div class="t-name">Mariam Alaa ElDin</div></div>
+          <div class="team-member"><div class="t-avatar av-green">M</div><div class="t-name">Mariem Ossama Hussien</div></div>
+          <div class="team-member"><div class="t-avatar av-mid">R</div><div class="t-name">Rawan Gamal Abdullah</div></div>
+        </div>
+      </div>
+        
+      </div>
+    </div>
+
+    
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

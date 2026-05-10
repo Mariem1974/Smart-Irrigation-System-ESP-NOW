@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>AgroSense · Mobile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+  <style>
+    :root {
+      --bg:         #0a1a0d;
+      --surface:    #0f2217;
+      --surface2:   #142b1a;
+      --border:     rgba(30,92,46,0.6);
+      --green:      #5dca83;
+      --green-dim:  #1e5c2e;
+      --green-glow: rgba(93,202,131,0.08);
+      --gold:       #ef9f27;
+      --blue:       #85b7eb;
+      --red:        #e05454;
+      --text:       #e8f5e4;
+      --text-muted: rgba(232,245,228,0.4);
+      --text-dim:   rgba(232,245,228,0.2);
+      --mono:       'Space Mono', monospace;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html, body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 14px;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 100;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 34px; height: 34px;
+      background: #1e4d2b;
+      border: 1px solid var(--green-dim);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-icon i { color: var(--green); font-size: 18px; }
+    .brand-name { font-size: 16px; font-weight: 600; }
+    .brand-sub  { font-size: 10px; color: rgba(93,202,131,0.55); font-family: var(--mono); }
+
+    .mqtt-badge {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      border: 1px solid #1e5c2e;
+      background: #0f2e17;
+      font-size: 10px; font-family: var(--mono);
+      color: var(--green);
+    }
+    .mqtt-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── SCROLL CONTAINER ── */
+    .scroll-wrap { padding: 0 0 80px; }
+
+    /* ── STATUS CARD ── */
+    .status-card {
+      margin: 10px 14px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    .status-msg { font-size: 11px; font-family: var(--mono); color: var(--text-muted); flex: 1; }
+    .status-time { font-size: 11px; font-family: var(--mono); color: var(--green); }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--text-dim); font-family: var(--mono);
+      letter-spacing: 1.5px; text-transform: uppercase;
+      margin: 14px 14px 8px;
+    }
+
+    /* ── HERO CARD ── */
+    .hero-card {
+      margin: 0 14px 10px;
+      background: var(--surface2);
+      border: 1px solid rgba(93,202,131,0.15);
+      border-radius: 22px;
+      padding: 18px;
+      position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ''; position: absolute;
+      right: -24px; top: -24px;
+      width: 110px; height: 110px; border-radius: 50%;
+      background: rgba(93,202,131,0.05);
+    }
+    .hero-label {
+      font-size: 10px; color: rgba(93,202,131,0.55);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      font-family: var(--mono); margin-bottom: 8px;
+    }
+    .hero-row { display: flex; align-items: flex-end; justify-content: space-between; }
+    .hero-val {
+      font-size: 54px; font-weight: 700;
+      color: var(--text); line-height: 1;
+      font-family: var(--mono); letter-spacing: -2px;
+    }
+    .hero-unit { font-size: 24px; color: var(--green); letter-spacing: 0; }
+    .hero-status-pill {
+      margin-top: 10px;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 13px;
+      background: rgba(93,202,131,0.1);
+      border: 1px solid rgba(93,202,131,0.2);
+      border-radius: 20px;
+      font-size: 10px; font-family: var(--mono); color: var(--green);
+    }
+
+    /* ── METRICS GRID ── */
+    .metrics-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin: 0 14px 10px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+    }
+    .metric-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+    .metric-icon i { font-size: 16px; }
+    .ic-temp { background: rgba(239,159,39,0.1); }
+    .ic-temp i { color: var(--gold); }
+    .ic-hum  { background: rgba(133,183,235,0.1); }
+    .ic-hum i { color: var(--blue); }
+    .metric-label {
+      font-size: 10px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: var(--mono); margin-bottom: 4px;
+    }
+    .metric-val {
+      font-size: 26px; font-weight: 700; color: var(--text);
+      font-family: var(--mono); line-height: 1; letter-spacing: -1px;
+    }
+    .metric-unit { font-size: 14px; font-weight: 400; }
+    .metric-badge {
+      display: inline-block; margin-top: 6px;
+      font-size: 9px; font-family: var(--mono);
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .badge-warn   { background: rgba(239,159,39,0.1);  color: var(--gold);  border: 1px solid rgba(239,159,39,0.2); }
+    .badge-ok     { background: rgba(93,202,131,0.1);  color: var(--green); border: 1px solid rgba(93,202,131,0.2); }
+    .badge-danger { background: rgba(224,84,84,0.1);   color: var(--red);   border: 1px solid rgba(224,84,84,0.2); }
+
+    /* ── CHART CARD ── */
+    .chart-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .card-title { font-size: 12px; font-weight: 600; }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+      margin: 0 14px 10px;
+      background: rgba(224,84,84,0.05);
+      border: 1px solid rgba(224,84,84,0.18);
+      border-radius: 16px; padding: 12px 14px;
+      display: none; align-items: center; gap: 10px;
+    }
+    .alert-banner.show { display: flex; }
+    .alert-icon {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: rgba(224,84,84,0.1);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .alert-icon i { color: var(--red); font-size: 16px; }
+    .alert-text { flex: 1; }
+    .alert-type-label { font-size: 11px; font-family: var(--mono); color: var(--red); font-weight: 700; }
+    .alert-detail-text { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .alert-ts { font-size: 10px; font-family: var(--mono); color: rgba(224,84,84,0.45); flex-shrink: 0; }
+
+    /* ── VALVE CARD ── */
+    .valve-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 16px;
+    }
+    .valve-state-badge {
+      background: rgba(93,202,131,0.1);
+      border: 1px solid rgba(93,202,131,0.25);
+      border-radius: 20px; padding: 4px 10px;
+      font-size: 10px; font-family: var(--mono); color: var(--green);
+    }
+    .valve-body { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+    .valve-ring {
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 2px solid var(--green-dim);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex-shrink: 0; position: relative; cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    .valve-ring.open { border-color: var(--green); }
+    .valve-ring::before {
+      content: ''; position: absolute; inset: 5px;
+      border-radius: 50%; border: 1px solid rgba(93,202,131,0.1);
+    }
+    .valve-deg { font-size: 17px; font-family: var(--mono); font-weight: 700; color: var(--green); line-height: 1; }
+    .valve-sub { font-size: 8px; color: rgba(93,202,131,0.5); font-family: var(--mono); margin-top: 3px; }
+    .valve-controls { flex: 1; }
+    .slider-label { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 10px; }
+
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      border-radius: 2px; background: #1a3d24; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 22px; height: 22px;
+      border-radius: 50%; background: var(--green);
+      cursor: pointer; border: 2px solid var(--bg);
+    }
+    .range-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+    .range-labels span { font-size: 9px; color: var(--text-dim); font-family: var(--mono); }
+
+    .preset-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+    .preset-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 9px; padding: 8px 4px; text-align: center;
+      cursor: pointer; color: var(--text-muted);
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      transition: all 0.15s;
+    }
+    .preset-btn div { font-size: 9px; margin-top: 2px; color: var(--text-dim); font-weight: 400; }
+    .preset-btn:active { background: rgba(93,202,131,0.1); color: var(--green); transform: scale(0.95); }
+
+    .btn-send {
+      width: 100%; padding: 13px;
+      background: var(--green); color: #071410;
+      border: none; border-radius: 11px;
+      font-family: var(--mono); font-size: 13px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.5px; margin-top: 12px;
+      transition: all 0.15s;
+    }
+    .btn-send:active { transform: scale(0.98); background: #4ab870; }
+
+    /* ── LOGIC CARD ── */
+    .logic-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+    }
+    .logic-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid rgba(30,92,46,0.3);
+      font-size: 11px; color: var(--text-muted);
+    }
+    .logic-item:last-child { border-bottom: none; }
+    .logic-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── ALERTS LIST ── */
+    .alerts-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; overflow: hidden;
+    }
+    .alerts-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .alert-count-badge {
+      font-size: 10px; font-family: var(--mono);
+      background: rgba(224,84,84,0.1); color: var(--red);
+      padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(224,84,84,0.2);
+    }
+    .alert-item {
+      padding: 10px 14px; border-bottom: 1px solid rgba(30,92,46,0.3);
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert-item:last-child { border-bottom: none; }
+    .alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+
+    /* ── SLEEP CARD ── */
+    .sleep-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+    }
+    .sleep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .sleep-btn {
+      padding: 13px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 11px;
+      color: var(--text-muted); font-family: var(--mono);
+      font-size: 13px; font-weight: 700; cursor: pointer; text-align: center;
+      transition: all 0.15s;
+    }
+    .sleep-btn span { display: block; font-size: 9px; font-weight: 400; color: var(--text-dim); margin-top: 3px; }
+    .sleep-btn:active { background: rgba(93,202,131,0.1); color: var(--green); transform: scale(0.97); }
+
+    /* ── NODE CARD ── */
+    .node-card {
+      margin: 0 14px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 14px;
+    }
+    .node-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid rgba(30,92,46,0.3);
+    }
+    .node-item:last-child { border-bottom: none; }
+    .node-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 8px; font-weight: 700;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .node-info { flex: 1; }
+    .node-name { font-size: 12px; font-weight: 600; }
+    .node-spec { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 1px; }
+    .node-qty {
+      font-size: 10px; font-family: var(--mono); color: var(--green);
+      background: rgba(93,202,131,0.08); padding: 3px 8px; border-radius: 6px;
+    }
+
+    /* ── LOGOUT ── */
+    .logout-row { margin: 0 14px 14px; }
+    .btn-logout {
+      width: 100%; padding: 13px; background: transparent;
+      border: 1px solid rgba(224,84,84,0.2); border-radius: 11px;
+      color: rgba(224,84,84,0.65); font-family: var(--mono);
+      font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+    .btn-logout:active { background: rgba(224,84,84,0.08); color: var(--red); }
+
+    /* ── REFRESH ── */
+    .refresh-row { margin: 0 14px 10px; }
+    .btn-refresh {
+      width: 100%; padding: 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 11px;
+      color: var(--text-muted); font-family: var(--mono); font-size: 12px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-refresh:active { color: var(--green); border-color: rgba(93,202,131,0.3); }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #0c2014;
+      border-top: 1px solid rgba(30,92,46,0.5);
+      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+      display: flex; z-index: 200;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      cursor: pointer; padding: 5px 0;
+      color: var(--text-dim); font-size: 9px;
+      font-family: var(--mono); background: none; border: none;
+      transition: color 0.2s;
+    }
+    .nav-btn i { font-size: 22px; transition: color 0.2s; }
+    .nav-btn.active { color: var(--green); }
+    .nav-btn.active i { color: var(--green); }
+    .nav-dot {
+      width: 4px; height: 4px; border-radius: 50%;
+      background: var(--green); margin-top: -1px; display: none;
+    }
+    .nav-btn.active .nav-dot { display: block; }
+
+    /* ── TABS ── */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    ::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon"><i class="ti ti-leaf" aria-hidden="true"></i></div>
+      <div>
+        <div class="brand-name">AgroSense</div>
+        <div class="brand-sub">NODE_A · Smart Irrigation</div>
+      </div>
+    </div>
+    <div class="mqtt-badge">
+      <div class="mqtt-dot" id="mqttDot"></div>
+      <span id="mqttLabel">MQTT</span>
+    </div>
+  </div>
+
+  <!-- SCROLL WRAP -->
+  <div class="scroll-wrap">
+    <div class="tab-section active" id="tab-overview">
+
+      <div class="status-card">
+        <div class="status-live-dot"></div>
+        <div class="status-msg" id="statusMsg">Waiting for ESP32...</div>
+        <div class="status-time" id="clockM">--:--</div>
+      </div>
+
+      <!-- HERO -->
+      <div class="hero-card">
+        <div class="hero-label">Soil Moisture</div>
+        <div class="hero-row">
+          <div>
+            <div class="hero-val"><span id="mMoisture">--</span><span class="hero-unit">%</span></div>
+            <div class="hero-status-pill" id="moisturePill">● Waiting</div>
+          </div>
+          <svg width="88" height="44" viewBox="0 0 88 44" style="display:block;">
+            <polyline id="sparkLine" points="0,36 14,32 28,28 42,34 56,18 70,12 88,20"
+              fill="none" stroke="rgba(93,202,131,0.5)" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon id="sparkFill" points="0,36 14,32 28,28 42,34 56,18 70,12 88,20 88,44 0,44"
+              fill="rgba(93,202,131,0.07)" stroke="none"/>
+            <circle cx="88" cy="20" r="3" fill="#5dca83"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-icon ic-temp" aria-hidden="true"><i class="ti ti-temperature"></i></div>
+          <div class="metric-label">Temperature</div>
+          <div class="metric-val"><span id="mTemp">--</span><span class="metric-unit" style="color:var(--gold);">°C</span></div>
+          <div class="metric-badge badge-warn" id="mTempBadge">DHT11</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon ic-hum" aria-hidden="true"><i class="ti ti-droplet"></i></div>
+          <div class="metric-label">Humidity</div>
+          <div class="metric-val"><span id="mHum">--</span><span class="metric-unit" style="color:var(--blue);">%</span></div>
+          <div class="metric-badge badge-ok" id="mHumBadge">DHT11</div>
+        </div>
+      </div>
+
+      <!-- CHART -->
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">Moisture History</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text-dim);" id="chartPts">Last 24 readings</div>
+        </div>
+        <canvas id="moistureChart" height="110"></canvas>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:10px;color:var(--text-dim);font-family:var(--mono);">Older</span>
+          <span style="font-size:10px;color:var(--text-dim);font-family:var(--mono);">Latest</span>
+        </div>
+      </div>
+
+      <!-- LATEST ALERT -->
+      <div class="alert-banner" id="latestAlertBanner">
+        <div class="alert-icon" aria-hidden="true"><i class="ti ti-alert-triangle"></i></div>
+        <div class="alert-text">
+          <div class="alert-type-label" id="latestAlertType">—</div>
+          <div class="alert-detail-text" id="latestAlertDetail">—</div>
+        </div>
+        <div class="alert-ts" id="latestAlertTs">—</div>
+      </div>
+
+      <div class="refresh-row">
+        <button class="btn-refresh" onclick="refreshAll()">↻ Refresh Data</button>
+      </div>
+
+    </div>
+
+    <!-- VALVE TAB -->
+    <div class="tab-section" id="tab-valve">
+      <div class="section-label">Valve Control</div>
+      <div class="valve-card">
+        <div class="card-header">
+          <div class="card-title">Servo Position</div>
+          <div class="valve-state-badge" id="valveStateBadge">CLOSED · 0°</div>
+        </div>
+        <div class="valve-body">
+          <div class="valve-ring" id="valveRing" onclick="quickToggle()">
+            <div class="valve-deg" id="valveDeg">0°</div>
+            <div class="valve-sub" id="valveSub">CLOSED</div>
+          </div>
+          <div class="valve-controls">
+            <div class="slider-label">Angle — <span id="sliderVal">0°</span></div>
+            <input type="range" id="servoSlider" min="0" max="120" value="0" step="5"
+              oninput="document.getElementById('sliderVal').textContent=this.value+'°'"/>
+            <div class="range-labels">
+              <span>0° Close</span><span>60° Mid</span><span>120° Full</span>
+            </div>
+          </div>
+        </div>
+        <div class="preset-row">
+          <button class="preset-btn" onclick="setPreset(0)">0°<div>Close</div></button>
+          <button class="preset-btn" onclick="setPreset(40)">40°<div>Low</div></button>
+          <button class="preset-btn" onclick="setPreset(80)">80°<div>Mid</div></button>
+          <button class="preset-btn" onclick="setPreset(120)">120°<div>Full</div></button>
+        </div>
+        <button class="btn-send" onclick="sendAngle()">Send to Gateway →</button>
+      </div>
+
+      <div class="section-label">Auto Logic</div>
+      <div class="logic-card">
+        <div class="logic-item"><div class="logic-dot" style="background:var(--green)"></div>Moisture &lt; 40% → Opens valve (proportional)</div>
+        <div class="logic-item"><div class="logic-dot" style="background:var(--red)"></div>Moisture &gt; 70% → Closes valve fully</div>
+        <div class="logic-item"><div class="logic-dot" style="background:var(--gold)"></div>Temp &gt; 33°C → +15% angle</div>
+        <div class="logic-item"><div class="logic-dot" style="background:var(--blue)"></div>Humidity &gt; 70% → -30% angle</div>
+      </div>
+    </div>
+
+    <!-- ALERTS TAB -->
+    <div class="tab-section" id="tab-alerts">
+      <div class="section-label">Gateway Alerts</div>
+      <div class="alerts-card">
+        <div class="alerts-header">
+          <span style="font-size:13px;font-weight:600;">Alerts</span>
+          <span class="alert-count-badge" id="alertCount">0</span>
+        </div>
+        <div id="alertsList">
+          <div style="padding:24px;text-align:center;font-size:11px;color:var(--text-muted);font-family:var(--mono);">
+            No alerts yet
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-section" id="tab-settings">
+      <div class="section-label">Deep Sleep</div>
+      <div class="sleep-card">
+        <div style="font-size:13px;font-weight:600;">Send NODE_A to Sleep</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">Via MQTT → Gateway → ESP-NOW</div>
+        <div class="sleep-grid">
+          <button class="sleep-btn" onclick="sendSleep(30)">30s<span>30 seconds</span></button>
+          <button class="sleep-btn" onclick="sendSleep(60)">1m<span>1 minute</span></button>
+          <button class="sleep-btn" onclick="sendSleep(300)">5m<span>5 minutes</span></button>
+          <button class="sleep-btn" onclick="sendSleep(600)">10m<span>10 minutes</span></button>
+        </div>
+      </div>
+
+
+      <div class="logout-row">
+        <button class="btn-logout" onclick="window.location.href='/logout'">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-overview" onclick="switchTab('overview')">
+      <i class="ti ti-plant-2" aria-hidden="true"></i>
+      <div class="nav-dot"></div>
+      <div>Overview</div>
+    </button>
+    <button class="nav-btn" id="nav-valve" onclick="switchTab('valve')">
+      <i class="ti ti-settings-2" aria-hidden="true"></i>
+      <div class="nav-dot"></div>
+      <div>Valve</div>
+    </button>
+    <button class="nav-btn" id="nav-alerts" onclick="switchTab('alerts')">
+      <i class="ti ti-bell" aria-hidden="true"></i>
+      <div class="nav-dot"></div>
+      <div>Alerts</div>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
+      <i class="ti ti-menu-2" aria-hidden="true"></i>
+      <div class="nav-dot"></div>
+      <div>Settings</div>
+    </button>
+  </nav>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script>
+    // ── CLOCK ──
+    function updateClock() {
+      document.getElementById('clockM').textContent = new Date().toTimeString().slice(0,5);
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ── TABS ──
+    function switchTab(name) {
+      document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+    }
+
+    // ── CHART ──
+    let chart = null;
+    function initChart() {
+      const ctx = document.getElementById('moistureChart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            borderColor: '#5dca83',
+            backgroundColor: 'rgba(93,202,131,0.07)',
+            borderWidth: 2,
+            pointRadius: 2,
+            pointBackgroundColor: '#5dca83',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false }, tooltip: {
+            callbacks: { label: c => c.parsed.y.toFixed(1) + '%' }
+          }},
+          scales: {
+            x: { display: false },
+            y: {
+              min: 0, max: 100,
+              grid: { color: 'rgba(93,202,131,0.05)' },
+              ticks: { color: 'rgba(232,245,228,0.3)', font: { size: 9 }, callback: v => v + '%' }
+            }
+          }
+        }
+      });
+    }
+
+    // ── SSE ──
+    function connectSSE() {
+      const es = new EventSource('/api/stream');
+      es.addEventListener('connected', () => {
+        document.getElementById('statusMsg').textContent = 'Connected — Waiting for ESP32...';
+      });
+      es.addEventListener('sensor_update', e => {
+        const d = JSON.parse(e.data);
+        updateKPIs(d);
+        document.getElementById('statusMsg').textContent = 'Last update: ' + d.ts;
+      });
+      es.addEventListener('alert', e => {
+        const d = JSON.parse(e.data);
+        addAlert(d);
+        showLatestAlert(d);
+      });
+      es.onerror = () => {
+        document.getElementById('statusMsg').textContent = 'Reconnecting...';
+      };
+    }
+
+    function updateKPIs(d) {
+      const m = parseFloat(d.moisture);
+      const t = parseFloat(d.temp);
+      const angle = d.angle || 0;
+      const isOpen = d.valve === 'OPEN';
+
+      document.getElementById('mMoisture').textContent = m.toFixed(1);
+      document.getElementById('mTemp').textContent = t.toFixed(1);
+      document.getElementById('mHum').textContent = parseFloat(d.hum).toFixed(1);
+
+      const pill = document.getElementById('moisturePill');
+      if (m < 20)      { pill.textContent = '● DRY';  pill.style.color = '#e05454'; }
+      else if (m < 40) { pill.textContent = '● LOW';  pill.style.color = '#ef9f27'; }
+      else if (m < 70) { pill.textContent = '● GOOD'; pill.style.color = '#5dca83'; }
+      else             { pill.textContent = '● WET';  pill.style.color = '#85b7eb'; }
+
+      const tb = document.getElementById('mTempBadge');
+      tb.textContent = t > 33 ? 'HOT' : t < 15 ? 'COLD' : 'NORMAL';
+      tb.className = t > 33 ? 'metric-badge badge-danger' : 'metric-badge badge-warn';
+
+      document.getElementById('valveDeg').textContent = angle + '°';
+      document.getElementById('valveSub').textContent = isOpen ? 'OPEN' : 'CLOSED';
+      document.getElementById('valveStateBadge').textContent = (isOpen ? 'OPEN' : 'CLOSED') + ' · ' + angle + '°';
+      const ring = document.getElementById('valveRing');
+      if (isOpen) ring.classList.add('open'); else ring.classList.remove('open');
+    }
+
+    function showLatestAlert(d) {
+      document.getElementById('latestAlertType').textContent   = d.type   || 'ALERT';
+      document.getElementById('latestAlertDetail').textContent = d.detail || d.node || '';
+      document.getElementById('latestAlertTs').textContent     = d.ts;
+      document.getElementById('latestAlertBanner').classList.add('show');
+    }
+
+    function addAlert(d) {
+      const list = document.getElementById('alertsList');
+      const isWarn = d.type && d.type.includes('TEMP');
+      const color  = isWarn ? '#ef9f27' : '#e05454';
+      const div = document.createElement('div');
+      div.className = 'alert-item';
+      div.innerHTML = `
+        <div class="alert-dot" style="background:${color}"></div>
+        <div style="flex:1;">
+          <div style="font-size:11px;font-family:var(--mono);font-weight:700;color:${color};">${d.type || 'ALERT'}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${d.detail || d.node || ''}</div>
+        </div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text-dim);flex-shrink:0;">${d.ts}</div>`;
+      const empty = list.querySelector('div[style*="text-align:center"]');
+      if (empty) list.innerHTML = '';
+      list.prepend(div);
+      document.getElementById('alertCount').textContent = list.querySelectorAll('.alert-item').length;
+    }
+
+    // ── MQTT STATUS ──
+    async function checkMQTT() {
+      try {
+        const r = await fetch('/api/mqtt/status');
+        const d = await r.json();
+        document.getElementById('mqttDot').style.background   = d.connected ? '#5dca83' : '#e05454';
+        document.getElementById('mqttLabel').textContent      = d.connected ? 'LIVE'    : 'OFF';
+      } catch(e) {}
+    }
+
+    // ── HISTORY ──
+    async function loadHistory() {
+      try {
+        const r    = await fetch('/api/sensors/history/NODE_A');
+        const rows = await r.json();
+        if (!chart || !rows.length) return;
+        chart.data.labels              = rows.map(r => r.timestamp.slice(11,16));
+        chart.data.datasets[0].data   = rows.map(r => parseFloat(r.soil_moisture).toFixed(2));
+        chart.update('none');
+        document.getElementById('chartPts').textContent = rows.length + ' pts';
+      } catch(e) {}
+    }
+
+    async function loadAlerts() {
+      try {
+        const r    = await fetch('/api/alerts');
+        const rows = await r.json();
+        if (!rows.length) return;
+        document.getElementById('alertsList').innerHTML = '';
+        rows.forEach(a => addAlert({ type: a.alert_type, detail: a.detail, node: a.node_id, ts: a.timestamp.slice(11,16) }));
+        if (rows[0]) showLatestAlert({ type: rows[0].alert_type, detail: rows[0].detail, ts: rows[0].timestamp.slice(11,16) });
+      } catch(e) {}
+    }
+
+    // ── VALVE ──
+    let valveOpen = false;
+
+    async function quickToggle() {
+      valveOpen = !valveOpen;
+      try {
+        await fetch('/api/valve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ open: valveOpen })
+        });
+      } catch(e) {}
+    }
+
+    function setPreset(angle) {
+      document.getElementById('servoSlider').value = angle;
+      document.getElementById('sliderVal').textContent = angle + '°';
+    }
+
+    async function sendAngle() {
+      const angle = parseInt(document.getElementById('servoSlider').value);
+      try {
+        await fetch('/api/valve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ angle })
+        });
+        document.getElementById('valveDeg').textContent = angle + '°';
+        document.getElementById('valveSub').textContent = angle > 0 ? 'OPEN' : 'CLOSED';
+        document.getElementById('valveStateBadge').textContent = (angle > 0 ? 'OPEN' : 'CLOSED') + ' · ' + angle + '°';
+        const ring = document.getElementById('valveRing');
+        if (angle > 0) ring.classList.add('open'); else ring.classList.remove('open');
+      } catch(e) {}
+    }
+
+    // ── SLEEP ──
+    async function sendSleep(sec) {
+      try {
+        await fetch('/api/sleep', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ node: 'NODE_A', seconds: sec })
+        });
+        document.getElementById('statusMsg').textContent = 'NODE_A sleeping ' + sec + 's...';
+      } catch(e) {}
+    }
+
+    // ── REFRESH ──
+    async function refreshAll() {
+      await loadHistory();
+      await loadAlerts();
+      await checkMQTT();
+    }
+
+    // ── INIT ──
+    initChart();
+    connectSSE();
+    checkMQTT();
+    loadHistory();
+    loadAlerts();
+    setInterval(checkMQTT, 15000);
+    setInterval(loadHistory, 30000);
+  </script>
+</body>
+</html>
