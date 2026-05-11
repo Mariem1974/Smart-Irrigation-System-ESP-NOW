@@ -80,9 +80,6 @@ This project automates irrigation decisions using real-time environmental data c
 
 ---
 
-
----
-
 ## 🚀 Installation & Setup
 
 ### 1. Prerequisites
